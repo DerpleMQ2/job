@@ -281,7 +281,7 @@ function Heal.Render()
     local curTanks = tostring(healsettings[CharConfig]["Tank"]) or "None"
     local flags = ImGuiInputTextFlags.CharsNoBlank + ImGuiInputTextFlags.EnterReturnsTrue
     if configLocked then flags = flags + ImGuiInputTextFlags.ReadOnly end
-    local newText, _ = ImGui.InputText("Tanks", curTanks, flags)
+    local newText, selected = ImGui.InputText("Tanks", curTanks, flags)
     if selected and newText ~= curTanks then
         healsettings[CharConfig]["Tank"] = newText
         SaveSettings()
