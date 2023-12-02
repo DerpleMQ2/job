@@ -20,6 +20,8 @@ local pauseAuctioning = true
 local popupAuctionCost = ""
 local popupAuctionItem = ""
 
+local openPopup = false
+
 local cacheItems = function()
     local itemCount = 0
     local line = ""
@@ -158,6 +160,7 @@ local ICON_HEIGHT = 50
 
 function AuctionJob.Render()
     if not auctionsettings then return end
+    local used
 
     ImGui.Text("Auction Settings")
     AuctionTimer, used = ImGui.SliderInt("Auction Timer", AuctionTimer, 1, 10, "%d")
@@ -165,14 +168,14 @@ function AuctionJob.Render()
         auctionsettings["Default"]["Timer"] = AuctionTimer
         SaveSettings(false)
     end
-    newText, selected = ImGui.InputText("Auction Channel", AuctionChannelNumber, ImGuiInputTextFlags.None)
+    local newText, _ = ImGui.InputText("Auction Channel", AuctionChannelNumber, ImGuiInputTextFlags.None)
     if newText:len() > 0 and newText ~= AuctionChannelNumber then
         AuctionChannelNumber = newText
         auctionsettings["Default"]["ChannelNumber"] = newText
         SaveSettings()
     end
     ImGui.Separator()
-    pauseAuctioning, pressed = ImGui.Checkbox("Pause Auction", pauseAuctioning)
+    pauseAuctioning, _ = ImGui.Checkbox("Pause Auction", pauseAuctioning)
     ImGui.SetWindowFontScale(1.2)
     ImGui.PushStyleColor(ImGuiCol.Text, 255, 255, 0, 1)
     ImGui.Text("Count Down: %ds", (AuctionTimer * 60) - (os.clock() - lastAuction))
@@ -239,6 +242,7 @@ end
 
 function AuctionJob.GiveTime()
     if (not auctionsettings[CharConfig]) then
+        ---@diagnostic disable-next-line: lowercase-global
         curState = "No configuration for " .. CharConfig .. "..."
         return
     end

@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global
 local mq = require('mq')
 local LIP = require('lib/LIP')
 local utils = require('lib/ed/utils')
@@ -5,7 +6,6 @@ local BFOUtils = require('lib/bfoutils')
 
 local ImGui = require('ImGui')
 ImGuiTabBarFlags = ImGuiTabBarFlags
-curState = curState
 
 local wizardGates = {
     3183,
