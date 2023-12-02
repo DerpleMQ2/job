@@ -4,6 +4,7 @@ local utils = require('lib/ed/utils')
 local BFOUtils = require('lib/bfoutils')
 
 local ImGui = require('ImGui')
+Buff = Buff
 
 local lichSpells = {
     "Dark Pact",

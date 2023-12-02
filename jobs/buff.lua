@@ -1,3 +1,4 @@
+---@diagnostic disable: deprecated
 local mq = require('mq')
 local LIP = require('lib/LIP')
 local utils = require('lib/ed/utils')
@@ -264,6 +265,7 @@ local RenderNewSpellPopup = function()
     if ImGui.BeginPopup(newSpellPopup) then
         ImGui.Text("New Spell:")
         local tmp_spell, selected_spell = ImGui.InputText("##edit", '', 0)
+        local popupSpellName
         if selected_spell then popupSpellName = tmp_spell end
 
         if ImGui.Button("Save") then
@@ -374,6 +376,8 @@ local renderBardUI = function()
         table.insert(bardModes, v)
     end
 
+    local bardModeClicked
+
     bardModeIndex, bardModeClicked = ImGui.Combo("Melody Set", bardModeIndex, bardModes, #bardModes)
     if bardModeClicked then
         buffsettings[CharConfig]["BardMode"] = bardModes[bardModeIndex]
@@ -385,12 +389,13 @@ function Buff.Render()
     if not buffsettings then return end
 
     local openPopup = false
+    local pressed
 
     ImGui.BeginTable("Header", 2, ImGuiTableFlags.SizingStretchProp)
     ImGui.TableNextColumn()
     ImGui.Text("Buff configuration..")
     ImGui.TableNextColumn()
-    configLocked, lockPressed = ImGui.Checkbox("Locked", configLocked)
+    configLocked, _ = ImGui.Checkbox("Locked", configLocked)
     ImGui.EndTable()
 
     canni, pressed = ImGui.Checkbox("Canni", canni)
@@ -424,8 +429,8 @@ function Buff.Render()
     end
 
     ImGui.TableNextColumn()
-    buffSpellIndex, elementClicked = ImGui.Combo("Slot", buffSpellIndex, SpellSlots, 8)
-    if elementClicked then
+    buffSpellIndex, pressed = ImGui.Combo("Slot", buffSpellIndex, SpellSlots, 8)
+    if pressed then
         buffSpellSlot = SpellSlots[buffSpellIndex]
         buffsettings["Default"]["SpellSlot"] = buffSpellSlot
         SaveSettings()
@@ -470,7 +475,7 @@ function Buff.Render()
                     local curSpell = buffsettings[CharConfig][v]
                     local flags = ImGuiInputTextFlags.None
                     if configLocked then flags = flags + ImGuiInputTextFlags.ReadOnly end
-                    newText, selected = ImGui.InputText(v, tostring(curSpell), flags)
+                    newText, _ = ImGui.InputText(v, tostring(curSpell), flags)
                     if newText ~= curSpell then
                         buffsettings[CharConfig][v] = newText
                         SaveSettings()
@@ -482,8 +487,8 @@ function Buff.Render()
     end
 
     if ImGui.CollapsingHeader("Target Config") then
-        for k, v in pairs(spellTargets) do
-            targetCheck, target_checked = ImGui.Checkbox(k, spellTargets[k])
+        for k, _ in pairs(spellTargets) do
+            local targetCheck, target_checked = ImGui.Checkbox(k, spellTargets[k])
             if target_checked then
                 local check = "1"
                 if targetCheck == false then check = "0" end
@@ -559,7 +564,7 @@ function Buff.GiveTime()
 
         --print(curState)
 
-        if mq.TLO.Spell(buffSpell).TargetType() == "Self" then buffTarget = 0 end
+        if mq.TLO.Spell(buffSpell).TargetType() == "Self" then buffTarget = "0" end
 
         if BFOUtils.CanCast(buffSpell) then
             BFOUtils.Cast(buffSpell, buffSpellSlot, buffTarget, false)

@@ -24,6 +24,9 @@ local petsettings = {}
 
 local Pet = {}
 
+local killRadius
+local killZRadius
+
 local PetElements = {
 	"Water",
 	"Fire",
@@ -250,6 +253,8 @@ function Pet.Render()
 	ImGui.Text("Pet configuration..")
 	ImGui.Separator()
 
+	local pressed
+
 	if ImGui.Button("Reload INI") then
 		Pet.Setup()
 	end
@@ -277,8 +282,8 @@ function Pet.Render()
 	end
 
 	if mq.TLO.Me.Class.Name() == "Magician" then
-		petTypeIndex, elementClicked = ImGui.Combo("Pet Element", petTypeIndex, PetElements, 4)
-		if elementClicked then
+		petTypeIndex, pressed = ImGui.Combo("Pet Element", petTypeIndex, PetElements, 4)
+		if pressed then
 			local petSpellBefore = highestPet
 			petType = PetElements[petTypeIndex]
 			petsettings["Default"]["PetType"] = petType
@@ -291,8 +296,8 @@ function Pet.Render()
 		end
 	end
 
-	castPetBuffs, buffs_checked = ImGui.Checkbox("CastPetBuffs", castPetBuffs)
-	if buffs_checked then
+	castPetBuffs, pressed = ImGui.Checkbox("CastPetBuffs", castPetBuffs)
+	if pressed then
 		local check = "1"
 		if castPetBuffs == false then check = "0" end
 
@@ -301,8 +306,8 @@ function Pet.Render()
 		Pet.Setup()
 	end
 
-	castStackableBuffs, stack_checked = ImGui.Checkbox("CastStackableBuffs", castStackableBuffs)
-	if stack_checked then
+	castStackableBuffs, pressed = ImGui.Checkbox("CastStackableBuffs", castStackableBuffs)
+	if pressed then
 		local check = "1"
 		if castStackableBuffs == false then check = "0" end
 
@@ -311,8 +316,8 @@ function Pet.Render()
 		Pet.Setup()
 	end
 
-	castPetShield, shield_checked = ImGui.Checkbox("CastShieldBuffs", castPetShield)
-	if shield_checked then
+	castPetShield, pressed = ImGui.Checkbox("CastShieldBuffs", castPetShield)
+	if pressed then
 		local check = "1"
 		if castPetShield == false then check = "0" end
 
@@ -321,8 +326,8 @@ function Pet.Render()
 		Pet.Setup()
 	end
 
-	castPetInCombat, shield_checked = ImGui.Checkbox("CastPetInCombat", castPetInCombat)
-	if shield_checked then
+	castPetInCombat, pressed = ImGui.Checkbox("CastPetInCombat", castPetInCombat)
+	if pressed then
 		local check = "1"
 		if castPetInCombat == false then check = "0" end
 
@@ -330,16 +335,6 @@ function Pet.Render()
 		SaveSettings()
 		Pet.Setup()
 	end
-
-
-	--ImGui.PushStyleColor(ImGuiCol.Text, 1.0, 0.0, 1.0, 0.75)
-	--ImGui.Text("-- INI File Settings --")
-	--ImGui.PopStyleColor(1)
-	--if( petsettings ) then
-	--    for k,v in pairs(petsettings["Default"]) do
-	--        ImGui.Text(k .. " = " .. v)
-	--    end
-	--end
 end
 
 function Pet.GiveTime()
@@ -400,8 +395,8 @@ function Pet.GiveTime()
 	end
 
 	if petsettings[CharConfig] and petsettings[CharConfig]["AutoKillPets"] then
-		local killRadius = petsettings["Default"]["AutoKillNpcsRadius"] or 165
-		local killZRadius = petsettings["Default"]["AutoKillNpcsZRadius"] or 10
+		killRadius = petsettings["Default"]["AutoKillNpcsRadius"] or 165
+		killZRadius = petsettings["Default"]["AutoKillNpcsZRadius"] or 10
 
 		if mq.TLO.Target.ID() == nil and mq.TLO.Me.XTarget(1).ID() > 0 then
 			mq.cmd("/target id " .. mq.TLO.Me.XTarget(1).ID())

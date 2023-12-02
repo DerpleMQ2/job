@@ -4,8 +4,10 @@ local utils = require('lib/ed/utils')
 local BFOUtils = require('lib/bfoutils')
 
 local ImGui = require('ImGui')
+ImGuiTabBarFlags = ImGuiTabBarFlags
+curState = curState
 
-wizardGates = {
+local wizardGates = {
     3183,
     3180,
     3181,
@@ -106,7 +108,7 @@ wizardGates = {
     674,
 };
 
-druidGates = {
+local druidGates = {
     3182,
     3184,
     24773,
@@ -368,12 +370,13 @@ end
 
 function TravelJob.Render()
     if not TravelJobSettings then return end
+    local pressed
 
     ImGui.BeginTable("Header", 2, ImGuiTableFlags.SizingStretchProp)
     ImGui.TableNextColumn()
     ImGui.Text("Travel Panel")
     ImGui.TableNextColumn()
-    configLocked, lockPressed = ImGui.Checkbox("Locked", configLocked)
+    configLocked, _ = ImGui.Checkbox("Locked", configLocked)
     ImGui.EndTable()
     ImGui.Separator()
 
@@ -383,8 +386,8 @@ function TravelJob.Render()
 
     ImGui.BeginTable("CharInfo", 2, ImGuiTableFlags.SizingStretchProp)
     ImGui.TableNextColumn()
-    classIndex, elementClicked = ImGui.Combo("Class", classIndex, classNames, #classNames)
-    if elementClicked then
+    classIndex, pressed = ImGui.Combo("Class", classIndex, classNames, #classNames)
+    if pressed then
         local className = classNames[classIndex]
         TravelJobSettings["Default"] = TravelJobSettings["Default"] or {}
         TravelJobSettings["Default"]["Class"] = className
@@ -395,7 +398,7 @@ function TravelJob.Render()
     ImGui.TableNextColumn()
     local flags = ImGuiInputTextFlags.CharsNoBlank
     if configLocked then flags = ImGuiInputTextFlags.CharsNoBlank + ImGuiInputTextFlags.ReadOnly end
-    newText, selected = ImGui.InputText("Char Name", charName, flags)
+    local newText, _ = ImGui.InputText("Char Name", charName, flags)
     if newText ~= charName then
         charName = newText
         TravelJobSettings["Default"]["Char"] = newText
