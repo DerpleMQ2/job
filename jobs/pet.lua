@@ -406,7 +406,7 @@ function Pet.GiveTime()
 			mq.cmd("/target id " .. mq.TLO.Me.XTarget(1).ID())
 		end
 
-		if mq.TLO.Target.ID() then
+		if mq.TLO.Target.ID() <= 0 then
 			if petsettings["Default"]["AutoKillNpcsName"] then
 				mq.cmd("/target " ..
 					petsettings["Default"]["AutoKillNpcsName"] ..
@@ -416,7 +416,7 @@ function Pet.GiveTime()
 			end
 		end
 
-		if mq.TLO.Target.Distance() > 200 or mq.TLO.Target.Type() ~= "NPC" or mq.TLO.Target.ID() == mq.TLO.Pet.ID() then
+		if mq.TLO.Target.ID() > 0 and (mq.TLO.Target.Distance() > 200 or mq.TLO.Target.Type() ~= "NPC" or mq.TLO.Target.ID() == mq.TLO.Pet.ID()) then
 			mq.cmd("/target clear")
 		end
 
