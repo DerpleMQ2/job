@@ -1,8 +1,8 @@
 local mq = require('mq')
 local LIP = require('lib/LIP')
-local utils = require('lib/ed/utils')
+require('lib/ed/utils')
 local BFOUtils = require('lib/bfoutils')
-
+local ICONS = require('mq.Icons')
 local ImGui = require('ImGui')
 
 local auctionjob_settings_file = '/lua/config/auction.ini'
@@ -190,29 +190,70 @@ function AuctionJob.Render()
     ImGui.Text("Auction Items")
     ImGui.SetWindowFontScale(1)
 
-    ImGui.BeginTable("Items", 3, ImGuiTableFlags.Resizable + ImGuiTableFlags.Borders)
-    ImGui.TableNextColumn()
-    ImGui.Text("Item")
-    ImGui.TableNextColumn()
-    ImGui.Text("Cost")
-    ImGui.TableNextColumn()
-    ImGui.Text("")
+    ImGui.BeginTable("Items", 4, ImGuiTableFlags.Resizable + ImGuiTableFlags.Borders)
+
+    ImGui.TableSetupColumn('Item', ImGuiTableColumnFlags.None, 250)
+    ImGui.TableSetupColumn('Cost', ImGuiTableColumnFlags.None, 50.0)
+    ImGui.TableSetupColumn('Active', ImGuiTableColumnFlags.None, 50.0)
+    ImGui.TableSetupColumn('', ImGuiTableColumnFlags.None, 50.0)
+    ImGui.TableHeadersRow()
     ImGui.PopStyleColor()
     if (auctionsettings) then
-        if auctionsettings[CharConfig] then
-            for k, v in pairs(auctionsettings[CharConfig]) do
-                ImGui.TableNextColumn()
-                ImGui.Text(k)
-                ImGui.TableNextColumn()
-                ImGui.Text(v)
-                ImGui.TableNextColumn()
-                ImGui.PushID(k)
-                if ImGui.SmallButton("Delete") then
-                    auctionsettings[CharConfig][k] = nil
-                    SaveSettings(true)
-                end
-                ImGui.PopID()
+        for k, v in pairs(auctionsettings[CharConfig] or {}) do
+            ImGui.TableNextColumn()
+            local _, clicked = ImGui.Selectable(k, false)
+            if clicked then
+                popupAuctionItem = k
+                popupAuctionCost = v
+                openPopup = true
             end
+            ImGui.TableNextColumn()
+            ImGui.Text(v)
+            ImGui.TableNextColumn()
+            ImGui.PushID(k .. "_togg_btn")
+            if ImGui.SmallButton(ICONS.FA_TOGGLE_ON) then
+                auctionsettings[CharConfig][k] = nil
+                auctionsettings[CharConfig .. "_disabled"] = auctionsettings[CharConfig .. "_disabled"] or {}
+                auctionsettings[CharConfig .. "_disabled"][k] = v
+                SaveSettings(true)
+                cacheItems()
+            end
+            ImGui.PopID()
+            ImGui.TableNextColumn()
+            ImGui.PushID(k .. "_trash_btn")
+            if ImGui.SmallButton(ICONS.FA_TRASH) then
+                auctionsettings[CharConfig][k] = nil
+                SaveSettings(true)
+            end
+            ImGui.PopID()
+        end
+        for k, v in pairs(auctionsettings[CharConfig .. "_disabled"] or {}) do
+            ImGui.TableNextColumn()
+            local _, clicked = ImGui.Selectable(k, false)
+            if clicked then
+                popupAuctionItem = k
+                popupAuctionCost = v
+                openPopup = true
+            end
+            ImGui.TableNextColumn()
+            ImGui.Text(v)
+            ImGui.TableNextColumn()
+            ImGui.PushID(k .. "_togg_btn")
+            if ImGui.SmallButton(ICONS.FA_TOGGLE_OFF) then
+                auctionsettings[CharConfig] = auctionsettings[CharConfig] or {}
+                auctionsettings[CharConfig][k] = v
+                auctionsettings[CharConfig .. "_disabled"][k] = nil
+                SaveSettings(true)
+                cacheItems()
+            end
+            ImGui.PopID()
+            ImGui.TableNextColumn()
+            ImGui.PushID(k .. "_trash_btn")
+            if ImGui.SmallButton(ICONS.FA_TRASH) then
+                auctionsettings[CharConfig][k] = nil
+                SaveSettings(true)
+            end
+            ImGui.PopID()
         end
     end
     ImGui.EndTable()
@@ -252,7 +293,7 @@ function AuctionJob.GiveTime()
     end
 
     if pauseAuctioning then
-        lastAuction = os.clock() + (os.clock() - lastAuction)
+        lastAuction = os.clock()
     end
 
     if forceAuction or os.clock() - lastAuction >= AuctionTimer * 60 then
