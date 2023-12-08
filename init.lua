@@ -230,6 +230,7 @@ local JobGUI = function()
     ImGui.Separator()
 
     sitOOC, _ = ImGui.Checkbox("Sit Out of Combat", sitOOC)
+    ---@diagnostic disable-next-line: undefined-field
     if sitOOC and not BFOUtils.IsInCombat() and not mq.TLO.Me.Sitting() and not mq.TLO.Me.Moving() and not BFOUtils.IsCasting() and mq.TLO.Cast.Ready() then
         mq.cmd("/if (!${Me.Sitting} && !${Me.Moving}) /sit")
     end
