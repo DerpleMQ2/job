@@ -30,7 +30,9 @@ local cacheItems = function()
     if (auctionsettings and #AuctionText == 0) then
         if auctionsettings[CharConfig] then
             for k, v in pairs(auctionsettings[CharConfig]) do
+                ---@diagnostic disable-next-line: undefined-field
                 if line:len() > 0 then line = line .. " | " end
+                ---@diagnostic disable-next-line: undefined-field
                 line = line .. mq.TLO.LinkDB("=" .. k)() .. " " .. v
                 itemCount = itemCount + 1
                 if itemCount == 4 then
@@ -61,6 +63,7 @@ local SaveSettings = function(clearItems)
 end
 
 function AuctionJob.Setup(config_dir)
+    ---@diagnostic disable-next-line: undefined-field
     if auctionjob_settings_path:len() == 0 then
         auctionjob_settings_path = config_dir .. auctionjob_settings_file
     end
@@ -99,7 +102,8 @@ local RenderNewAuctionPopup = function()
         if selected_cost then popupAuctionCost = tmp_cost end
 
         if ImGui.Button("Save") then
-            if popupAuctionItem ~= nil and popupAuctionItem:len() > 0 then
+            ---@diagnostic disable-next-line: undefined-field
+            if popupAuctionItem:len() > 0 then
                 auctionsettings[CharConfig] = auctionsettings[CharConfig] or {}
                 auctionsettings[CharConfig][popupAuctionItem] = popupAuctionCost
                 SaveSettings(true)
@@ -150,7 +154,7 @@ end
 
 local addCursorItem = function()
     if mq.TLO.Cursor() ~= nil then
-        popupAuctionItem = mq.TLO.Cursor()
+        popupAuctionItem = mq.TLO.Cursor() or ""
         openPopup = true
     end
 end
@@ -169,6 +173,7 @@ function AuctionJob.Render()
         SaveSettings(false)
     end
     local newText, _ = ImGui.InputText("Auction Channel", AuctionChannelNumber, ImGuiInputTextFlags.None)
+    ---@diagnostic disable-next-line: undefined-field
     if newText:len() > 0 and newText ~= AuctionChannelNumber then
         AuctionChannelNumber = newText
         auctionsettings["Default"]["ChannelNumber"] = newText

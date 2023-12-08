@@ -7,6 +7,8 @@ local ImGui = require('ImGui')
 
 local __WMCasting = false
 
+local actors = require 'actors'
+
 local jobs = {}
 jobs["JobPet"] = require('jobs/pet')
 jobs["JobBuff"] = require('jobs/buff')
@@ -283,6 +285,19 @@ local Job = function()
         end
     end
 end
+
+-- Global Messaging callback
+---@diagnostic disable-next-line: unused-local
+local script_actor = actors.register(function(message)
+    if message()["from"] == CharConfig then return end
+
+    printf("\ayGot Event from(\am%s\ay) module(\at%s\ay) event(\at%s\ay)", message()["from"], message()["module"],
+        message()["event"])
+
+    if message()["module"] then
+        jobs[message()["module"]].Setup()
+    end
+end)
 
 mq.bind('/jobend', function() terminate = true end)
 

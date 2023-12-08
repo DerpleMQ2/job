@@ -59,6 +59,7 @@ local healPlayer = function(p, CurChar, CurCharId)
         return
     end
 
+    ---@diagnostic disable-next-line: undefined-field
     if BFOUtils.IsCasting() or not mq.TLO.Cast.Ready() or mq.TLO.Me.Moving() then
         return
     end
@@ -279,8 +280,9 @@ function Heal.Render()
     ImGui.Text("Group Needs Heal Count: " .. groupNeedsHealCount)
 
     local curTanks = tostring(healsettings[CharConfig]["Tank"]) or "None"
-    local flags = ImGuiInputTextFlags.CharsNoBlank + ImGuiInputTextFlags.EnterReturnsTrue
-    if configLocked then flags = flags + ImGuiInputTextFlags.ReadOnly end
+    ---@type ImGuiInputTextFlags
+    local flags = bit32.bor(ImGuiInputTextFlags.CharsNoBlank, ImGuiInputTextFlags.EnterReturnsTrue)
+    if configLocked then flags = bit32.bor(flags, ImGuiInputTextFlags.ReadOnly) end
     local newText, selected = ImGui.InputText("Tanks", curTanks, flags)
     if selected and newText ~= curTanks then
         healsettings[CharConfig]["Tank"] = newText

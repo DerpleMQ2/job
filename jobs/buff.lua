@@ -1,8 +1,9 @@
 ---@diagnostic disable: deprecated
 local mq = require('mq')
 local LIP = require('lib/LIP')
-local utils = require('lib/ed/utils')
+require('lib/ed/utils')
 local BFOUtils = require('lib/bfoutils')
+local actors = require 'actors'
 
 local ImGui = require('ImGui')
 
@@ -45,7 +46,9 @@ local CanniSpells = {
     "Cannibalize V",
 }
 
+---@type string
 local buff_settings_file = '/lua/config/buff.ini'
+---@type string
 local buff_settings_path = ""
 local buffsettings = {}
 
@@ -59,8 +62,13 @@ end
 
 mq.event('Rebuff', "#*#tells you, 'rebuff'#*#", requestRebuff)
 
-local SaveSettings = function()
+---@param doBroadcast boolean
+local SaveSettings = function(doBroadcast)
     LIP.save(buff_settings_path, buffsettings)
+
+    if doBroadcast then
+        actors.send({ from = CharConfig, module = "JobBuff", event = "SaveSettings" })
+    end
 end
 
 local doCanni = function()
@@ -100,7 +108,9 @@ local doMelody = function()
         mq.cmd("/stopsong")
     else
         --print(mq.TLO.Cast.Effect.ID())
+        ---@diagnostic disable-next-line: undefined-field
         if mq.TLO.Cast.Effect.ID() and mq.TLO.Cast.Effect.ID() > 0 then
+            ---@diagnostic disable-next-line: undefined-field
             if mq.TLO.Cast.Status() == "I" then
                 curState = "Melody is Stuck.  Resetting..."
                 mq.cmd("/stopcast")
@@ -195,6 +205,7 @@ local fullRebuffCheck = function()
 
     for k, v in pairs(validCharList) do
         --print(k.." : "..v["ID"])
+        ---@type character|pet|target|fun():string|nil
         local buffTarget = mq.TLO.Me
         if tonumber(v["ID"]) == tonumber(mq.TLO.Pet.ID()) then
             buffTarget = mq.TLO.Pet
@@ -261,18 +272,20 @@ local fullRebuffCheck = function()
     end
 end
 
+local popupSpellName
+
 local RenderNewSpellPopup = function()
     if ImGui.BeginPopup(newSpellPopup) then
         ImGui.Text("New Spell:")
         local tmp_spell, selected_spell = ImGui.InputText("##edit", '', 0)
-        local popupSpellName
         if selected_spell then popupSpellName = tmp_spell end
 
         if ImGui.Button("Save") then
+            --printf("%s", popupSpellName)
             if popupSpellName ~= nil and popupSpellName:len() > 0 then
                 buffsettings[CharConfig] = buffsettings[CharConfig] or {}
                 buffsettings[CharConfig][popupSpellName] = "|"
-                SaveSettings()
+                SaveSettings(true)
                 Buff.Setup()
             else
                 print("\arError Saving Spell: Spell Name cannot be empty.\ax")
@@ -289,9 +302,10 @@ local RenderNewSpellPopup = function()
     end
 end
 
-
 function Buff.Setup(config_dir)
+    --print("Buff.Setup() Called")
     buff_settings_file = '/lua/config/buff.ini'
+    ---@diagnostic disable-next-line: undefined-field
     if buff_settings_path:len() == 0 then
         buff_settings_path = config_dir .. buff_settings_file
     end
@@ -311,7 +325,7 @@ function Buff.Setup(config_dir)
     if (buffsettings) then
         if buffsettings[CharConfig] then
             for k, v in pairs(buffsettings[CharConfig]) do
-                if k ~= "BardMode" then
+                if k ~= "BardMode" and k ~= "BuffInCombat" and k ~= "FullRebuffCheckTimer" then
                     table.insert(sortedSpellKeys, k)
 
                     local targets = BFOUtils.Tokenize(v, "|")
@@ -338,9 +352,9 @@ function Buff.Setup(config_dir)
         end
     end
 
-    if not buffsettings["Default"] then
-        buffsettings["Default"] = {}
-    end
+    buffsettings[CharConfig] = buffsettings[CharConfig] or {}
+    buffsettings["Default"] = buffsettings["Default"] or {}
+    buffsettings["Default"]["FullRebuffCheckTimer"] = buffsettings[CharConfig]["FullRebuffCheckTimer"] or 600
 
     buffSpellSlot = tostring((buffsettings["Default"]["SpellSlot"] or 5))
     for i, v in ipairs(SpellSlots) do
@@ -349,23 +363,13 @@ function Buff.Setup(config_dir)
         end
     end
 
-    buffsettings[CharConfig] = buffsettings[CharConfig] or {}
-
     if buffsettings[CharConfig]["Canni"] ~= nil then
         canni = buffsettings[CharConfig]["Canni"]
     end
 
-    buffInCombat = buffsettings[CharConfig]["BuffInCombat"]
+    buffInCombat = buffsettings[CharConfig]["BuffInCombat"] or buffsettings["Default"]["BuffInCombat"] or true
 
-    if buffInCombat == nil then
-        buffInCombat = buffsettings["Default"]["BuffInCombat"]
-    end
-
-    if buffInCombat == nil then
-        buffInCombat = true
-    end
-
-    SaveSettings()
+    SaveSettings(false)
 end
 
 local renderBardUI = function()
@@ -381,7 +385,7 @@ local renderBardUI = function()
     bardModeIndex, bardModeClicked = ImGui.Combo("Melody Set", bardModeIndex, bardModes, #bardModes)
     if bardModeClicked then
         buffsettings[CharConfig]["BardMode"] = bardModes[bardModeIndex]
-        SaveSettings()
+        SaveSettings(true)
     end
 end
 
@@ -401,13 +405,13 @@ function Buff.Render()
     canni, pressed = ImGui.Checkbox("Canni", canni)
     if pressed then
         buffsettings[CharConfig]["Canni"] = tostring(canni)
-        SaveSettings()
+        SaveSettings(true)
     end
     ImGui.SameLine()
     buffInCombat, pressed = ImGui.Checkbox("Buff In Combat", buffInCombat)
     if pressed then
         buffsettings[CharConfig]["BuffInCombat"] = tostring(buffInCombat)
-        SaveSettings()
+        SaveSettings(true)
     end
 
     ImGui.Separator()
@@ -433,13 +437,13 @@ function Buff.Render()
     if pressed then
         buffSpellSlot = SpellSlots[buffSpellIndex]
         buffsettings["Default"]["SpellSlot"] = buffSpellSlot
-        SaveSettings()
+        SaveSettings(true)
     end
     ImGui.EndTable()
 
-    ImGui.Text("Rebuff Check Timer: " .. buffsettings["Default"]["FullRebuffCheckTimer"] .. "s")
+    ImGui.Text("Rebuff Check Timer: " .. FormatTime(buffsettings["Default"]["FullRebuffCheckTimer"]))
     ImGui.Text("Next Rebuff Check : " ..
-        math.floor(buffsettings["Default"]["FullRebuffCheckTimer"] - (os.clock() - lastFullBuff)) .. "s")
+        FormatTime(math.floor(tonumber(buffsettings["Default"]["FullRebuffCheckTimer"]) - (os.clock() - lastFullBuff))))
 
     ImGui.Text("Buff Count: " .. #sortedSpellKeys)
 
@@ -471,16 +475,15 @@ function Buff.Render()
         if buffsettings[CharConfig] then
             local newText = ""
             for k, v in ipairs(sortedSpellKeys) do
-                if v ~= "BardMode" then -- bard mode is rendered differently.
-                    local curSpell = buffsettings[CharConfig][v]
-                    local flags = ImGuiInputTextFlags.None
-                    if configLocked then flags = flags + ImGuiInputTextFlags.ReadOnly end
-                    newText, _ = ImGui.InputText(v, tostring(curSpell), flags)
-                    if newText ~= curSpell then
-                        buffsettings[CharConfig][v] = newText
-                        SaveSettings()
-                        Buff.Setup()
-                    end
+                local curSpell = tostring(buffsettings[CharConfig][v])
+                local flags = ImGuiInputTextFlags.None
+                if configLocked then flags = flags + ImGuiInputTextFlags.ReadOnly end
+                newText, _ = ImGui.InputText(v, curSpell, flags)
+                if newText ~= curSpell then
+                    buffsettings[CharConfig][v] = newText
+                    SaveSettings(true)
+                    Buff.Setup()
+                    --printf("a '%s' ~= '%s'", newText, curSpell)
                 end
             end
         end
@@ -494,7 +497,7 @@ function Buff.Render()
                 if targetCheck == false then check = "0" end
                 buffsettings[CharConfigTarget] = buffsettings[CharConfigTarget] or {}
                 buffsettings[CharConfigTarget][k] = check
-                SaveSettings()
+                SaveSettings(true)
                 Buff.Setup()
             end
         end
@@ -521,17 +524,24 @@ function Buff.GiveTime()
 
     doMelody()
 
+    ---@diagnostic disable-next-line: undefined-field
     if BFOUtils.IsCasting() or not mq.TLO.Cast.Ready() or mq.TLO.Me.Moving() then
         return
     end
 
     doAltAct()
 
+    local lastFullBuffDelta = os.clock() - lastFullBuff
+
+    if (lastFullBuffDelta > tonumber(buffsettings["Default"]["FullRebuffCheckTimer"])) or lastFullBuff == 0 then
+        lastFullBuff = os.clock()
+        --print(lastFullBuff)
+        fullRebuffCheck()
+    end
+
     if not buffsettings[CharConfig]["BuffInCombat"] and mq.TLO.Me.CombatState() == "COMBAT" then
         return
     end
-
-    local lastFullBuffDelta = os.clock() - lastFullBuff
 
     local MGBSpell = buffsettings[CharConfig]["MGB"]
 
@@ -542,11 +552,6 @@ function Buff.GiveTime()
     end
 
     if #sortedSpellKeys == 0 then return end
-
-    if lastFullBuffDelta > buffsettings["Default"]["FullRebuffCheckTimer"] or lastFullBuff == 0 then
-        lastFullBuff = os.clock()
-        fullRebuffCheck()
-    end
 
     if next(requiredBuffs) == nil then
         curState = "Idle..."

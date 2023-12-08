@@ -19,7 +19,7 @@ local castPetShield = false
 local castPetInCombat = true
 
 local pet_settings_file = '/lua/config/pet.ini'
-local pet_settings_path = ""
+local pet_settings_path = nil
 local petsettings = {}
 
 local Pet = {}
@@ -209,7 +209,7 @@ local doPetBuffCast = function(buff, wait)
 end
 
 function Pet.Setup(config_dir)
-	if pet_settings_path:len() == 0 then
+	if not pet_settings_path then
 		pet_settings_path = config_dir .. pet_settings_file
 	end
 
@@ -342,6 +342,7 @@ function Pet.GiveTime()
 		return
 	end
 
+	---@diagnostic disable-next-line: undefined-field
 	if BFOUtils.IsCasting() or not mq.TLO.Cast.Ready() or mq.TLO.Me.Moving() then
 		return
 	end

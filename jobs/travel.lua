@@ -254,10 +254,10 @@ TravelJobSettings = {}
 local TravelJob = {}
 
 local TravelJob_settings_file = '/lua/config/travel.ini'
-local TravelJob_settings_path = ""
+local TravelJob_settings_path = nil
 
 function TravelJob.Setup(config_dir)
-    if TravelJob_settings_path:len() == 0 then
+    if not TravelJob_settings_path then
         TravelJob_settings_path = config_dir .. TravelJob_settings_file
     end
 
@@ -397,7 +397,7 @@ function TravelJob.Render()
 
     ImGui.TableNextColumn()
     local flags = ImGuiInputTextFlags.CharsNoBlank
-    if configLocked then flags = ImGuiInputTextFlags.CharsNoBlank + ImGuiInputTextFlags.ReadOnly end
+    if configLocked then flags = bit32.bor(flags, ImGuiInputTextFlags.CharsNoBlank, ImGuiInputTextFlags.ReadOnly) end
     local newText, _ = ImGui.InputText("Char Name", charName, flags)
     if newText ~= charName then
         charName = newText
