@@ -14,7 +14,7 @@ local spellTargets = {}
 local configLocked = true
 
 local heal_settings_file = '/lua/config/heal.ini'
-local heal_settings_path = ""
+local heal_settings_path = nil
 local healsettings = {}
 
 local Heal = {}
@@ -149,17 +149,24 @@ local healGroup = function()
     end
 end
 
-local SaveSettings = function()
+---@param doBroadcast boolean
+local SaveSettings = function(doBroadcast)
     LIP.save(heal_settings_path, healsettings)
+
+    if doBroadcast then
+        JobActors.send({ from = CharConfig, module = "JobHeal", event = "SaveSettings" })
+    end
 end
 
 function Heal.Setup(config_dir)
-    heal_settings_path = config_dir .. heal_settings_file
+    if not heal_settings_path and config_dir then
+        heal_settings_path = config_dir .. heal_settings_file
+    end
 
     if file_exists(heal_settings_path) then
         healsettings = LIP.load(heal_settings_path)
     else
-        print("Can't find heal.ini at: " .. heal_settings_path)
+        print("\ayCan't find heal.ini at: " .. heal_settings_path)
         return
     end
 
@@ -176,7 +183,7 @@ function Heal.Setup(config_dir)
 
     healsettings[CharConfigTarget] = healsettings[CharConfigTarget] or {}
 
-    for i, p in ipairs(tanksTable) do
+    for _, p in ipairs(tanksTable) do
         local CurChar = p or "None"
         local CurCharId = mq.TLO.Spawn("=" .. CurChar).ID() or -1
 
@@ -202,7 +209,7 @@ function Heal.Setup(config_dir)
         createOrUpdateTableEntry(p, CurChar, CurCharId)
     end
 
-    SaveSettings()
+    SaveSettings(false)
 end
 
 local renderPlayerBar = function(p)
@@ -244,7 +251,7 @@ local renderPlayerBar = function(p)
         if targetCheck == false then check = "0" end
         healsettings[CharConfigTarget] = healsettings[CharConfigTarget] or {}
         healsettings[CharConfigTarget][p] = check
-        SaveSettings()
+        SaveSettings(true)
         Heal.Setup()
     end
     ImGui.TableNextColumn()
@@ -286,7 +293,7 @@ function Heal.Render()
     local newText, selected = ImGui.InputText("Tanks", curTanks, flags)
     if selected and newText ~= curTanks then
         healsettings[CharConfig]["Tank"] = newText
-        SaveSettings()
+        SaveSettings(true)
         Heal.Setup()
     end
 

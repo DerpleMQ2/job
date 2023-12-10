@@ -257,7 +257,7 @@ local TravelJob_settings_file = '/lua/config/travel.ini'
 local TravelJob_settings_path = nil
 
 function TravelJob.Setup(config_dir)
-    if not TravelJob_settings_path then
+    if not TravelJob_settings_path and config_dir then
         TravelJob_settings_path = config_dir .. TravelJob_settings_file
     end
 
@@ -307,8 +307,13 @@ function TravelJob.Setup(config_dir)
     end
 end
 
-local SaveSettings = function()
+---@param doBroadcast boolean
+local SaveSettings = function(doBroadcast)
     LIP.save(TravelJob_settings_path, TravelJobSettings)
+
+    if doBroadcast then
+        JobActors.send({ from = CharConfig, module = "JobTravel", event = "SaveSettings" })
+    end
 end
 
 function TravelJob.UpdateWMCast(wmCast)
@@ -319,7 +324,7 @@ function TravelJob.UpdateWMCast(wmCast)
         TravelJobSettings["Default"]["WMCast"] = 1
     end
 
-    SaveSettings()
+    SaveSettings(true)
     TravelJob.Setup()
 end
 
@@ -391,7 +396,7 @@ function TravelJob.Render()
         local className = classNames[classIndex]
         TravelJobSettings["Default"] = TravelJobSettings["Default"] or {}
         TravelJobSettings["Default"]["Class"] = className
-        SaveSettings()
+        SaveSettings(true)
         TravelJob.Setup()
     end
 
@@ -402,7 +407,7 @@ function TravelJob.Render()
     if newText ~= charName then
         charName = newText
         TravelJobSettings["Default"]["Char"] = newText
-        SaveSettings()
+        SaveSettings(true)
     end
     ImGui.EndTable()
 

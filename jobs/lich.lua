@@ -50,15 +50,22 @@ local LichSpell = "None"
 local curState = "Idle..."
 
 local lich_settings_file = '/lua/config/lich.ini'
-local lich_settings_path = ""
+local lich_settings_path = nil
 local lichsettings = {}
 
-local SaveSettings = function()
+---@param doBroadcast  boolean
+local SaveSettings = function(doBroadcast)
     LIP.save(lich_settings_path, lichsettings)
+
+    if doBroadcast then
+        JobActors.send({ from = CharConfig, module = "JobLich", event = "SaveSettings" })
+    end
 end
 
 function Lich.Setup(config_dir)
-    lich_settings_path = config_dir .. lich_settings_file
+    if not lich_settings_path and config_dir then
+        lich_settings_path = config_dir .. lich_settings_file
+    end
 
     if file_exists(lich_settings_path) then
         lichsettings = LIP.load(lich_settings_path)
@@ -70,7 +77,7 @@ function Lich.Setup(config_dir)
     if not lichsettings[CharConfig] or not lichsettings[CharConfig]["LichEnabled"] then
         lichsettings[CharConfig] = lichsettings[CharConfig] or {}
         lichsettings[CharConfig]["LichEnabled"] = 0
-        SaveSettings()
+        SaveSettings(true)
     end
 
     LichSpell = BFOUtils.GetHighestSpell(lichSpells, nil)
@@ -87,7 +94,7 @@ local renderToggleButton = function(text)
             lichsettings[CharConfig]["LichEnabled"] = 0
         end
 
-        SaveSettings()
+        SaveSettings(true)
     end
 end
 
@@ -125,6 +132,7 @@ function Lich.GiveTime()
         return
     end
 
+    ---@diagnostic disable-next-line: undefined-field
     if BFOUtils.IsCasting() or not mq.TLO.Cast.Ready() or mq.TLO.Me.Moving() then
         return
     end

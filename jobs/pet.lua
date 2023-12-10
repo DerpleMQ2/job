@@ -209,7 +209,7 @@ local doPetBuffCast = function(buff, wait)
 end
 
 function Pet.Setup(config_dir)
-	if not pet_settings_path then
+	if not pet_settings_path and config_dir then
 		pet_settings_path = config_dir .. pet_settings_file
 	end
 
@@ -245,8 +245,13 @@ function Pet.Setup(config_dir)
 	highestPet = BFOUtils.GetHighestSpell(PetSpells, petType)
 end
 
-local SaveSettings = function()
+---@param doBroadcast boolean
+local SaveSettings = function(doBroadcast)
 	LIP.save(pet_settings_path, petsettings)
+
+	if doBroadcast then
+		JobActors.send({ from = CharConfig, module = "JobPet", event = "SaveSettings" })
+	end
 end
 
 function Pet.Render()
@@ -287,7 +292,7 @@ function Pet.Render()
 			local petSpellBefore = highestPet
 			petType = PetElements[petTypeIndex]
 			petsettings["Default"]["PetType"] = petType
-			SaveSettings()
+			SaveSettings(true)
 			Pet.Setup()
 
 			if petSpellBefore ~= highestPet then
@@ -302,7 +307,7 @@ function Pet.Render()
 		if castPetBuffs == false then check = "0" end
 
 		petsettings["Default"]["CastPetBuffs"] = check
-		SaveSettings()
+		SaveSettings(true)
 		Pet.Setup()
 	end
 
@@ -312,7 +317,7 @@ function Pet.Render()
 		if castStackableBuffs == false then check = "0" end
 
 		petsettings["Default"]["CastStackableBuffs"] = check
-		SaveSettings()
+		SaveSettings(true)
 		Pet.Setup()
 	end
 
@@ -322,7 +327,7 @@ function Pet.Render()
 		if castPetShield == false then check = "0" end
 
 		petsettings["Default"]["CastShieldBuffs"] = check
-		SaveSettings()
+		SaveSettings(true)
 		Pet.Setup()
 	end
 
@@ -332,7 +337,7 @@ function Pet.Render()
 		if castPetInCombat == false then check = "0" end
 
 		petsettings["Default"]["CastPetInCombat"] = check
-		SaveSettings()
+		SaveSettings(true)
 		Pet.Setup()
 	end
 end

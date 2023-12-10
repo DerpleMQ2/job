@@ -7,12 +7,14 @@ local ImGui = require('ImGui')
 local ExampleJob = {}
 
 local examplejob_settings_file = '/lua/config/examplejob.ini'
-local examplejob_settings_path = ""
+local examplejob_settings_path = nil
 local examplejobsettings = {}
 local curState = "Idle.."
 
 function ExampleJob.Setup(config_dir)
-    examplejob_settings_path = config_dir .. examplejob_settings_file
+    if not examplejob_settings_path and config_dir then
+        examplejob_settings_path = config_dir .. examplejob_settings_file
+    end
 
     if file_exists(examplejob_settings_path) then
         examplejobsettings = LIP.load(examplejob_settings_path)
@@ -22,8 +24,12 @@ function ExampleJob.Setup(config_dir)
     end
 end
 
-local SaveSettings = function()
+local SaveSettings = function(doBroadcast)
     LIP.save(examplejob_settings_path, examplejobsettings)
+
+    if doBroadcast then
+        JobActors.send({ from = CharConfig, module = "JobExampleJob", event = "SaveSettings" })
+    end
 end
 
 function ExampleJob.Render()

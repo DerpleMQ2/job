@@ -3,7 +3,6 @@ local mq = require('mq')
 local LIP = require('lib/LIP')
 require('lib/ed/utils')
 local BFOUtils = require('lib/bfoutils')
-local actors = require 'actors'
 
 local ImGui = require('ImGui')
 
@@ -49,7 +48,7 @@ local CanniSpells = {
 ---@type string
 local buff_settings_file = '/lua/config/buff.ini'
 ---@type string
-local buff_settings_path = ""
+local buff_settings_path = nil
 local buffsettings = {}
 
 local Buff = {}
@@ -67,7 +66,7 @@ local SaveSettings = function(doBroadcast)
     LIP.save(buff_settings_path, buffsettings)
 
     if doBroadcast then
-        actors.send({ from = CharConfig, module = "JobBuff", event = "SaveSettings" })
+        JobActors.send({ from = CharConfig, module = "JobBuff", event = "SaveSettings" })
     end
 end
 
@@ -305,8 +304,7 @@ end
 function Buff.Setup(config_dir)
     --print("Buff.Setup() Called")
     buff_settings_file = '/lua/config/buff.ini'
-    ---@diagnostic disable-next-line: undefined-field
-    if buff_settings_path:len() == 0 then
+    if not buff_settings_path and config_dir then
         buff_settings_path = config_dir .. buff_settings_file
     end
 

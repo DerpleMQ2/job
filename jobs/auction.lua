@@ -6,7 +6,7 @@ local ICONS = require('mq.Icons')
 local ImGui = require('ImGui')
 
 local auctionjob_settings_file = '/lua/config/auction.ini'
-local auctionjob_settings_path = ""
+local auctionjob_settings_path = nil
 local auctionsettings = {}
 
 local AuctionJob = {}
@@ -52,19 +52,26 @@ local cacheItems = function()
     end
 end
 
-local SaveSettings = function(clearItems)
+---@param doBroadcast boolean
+local function SaveSettings(doBroadcast)
     print("Saving Auction Settings...")
     LIP.save(auctionjob_settings_path, auctionsettings)
 
-    if clearItems then
-        AuctionText = {}
-        cacheItems()
+    if doBroadcast then
+        JobActors.send({ from = CharConfig, module = "JobAuction", event = "SaveSettings" })
     end
 end
 
+---@param doBroadcast boolean
+local function SaveSettingsAndClear(doBroadcast)
+    AuctionText = {}
+    cacheItems()
+
+    SaveSettings(doBroadcast)
+end
+
 function AuctionJob.Setup(config_dir)
-    ---@diagnostic disable-next-line: undefined-field
-    if auctionjob_settings_path:len() == 0 then
+    if not auctionjob_settings_path and config_dir then
         auctionjob_settings_path = config_dir .. auctionjob_settings_file
     end
 
@@ -81,7 +88,7 @@ function AuctionJob.Setup(config_dir)
             auctionsettings["Default"]["Timer"] = 5
             auctionsettings["Default"]["ChannelNumber"] = "0"
 
-            SaveSettings()
+            SaveSettings(true)
         end
     else
         print("Can't find auctionjob.ini at: " .. auctionjob_settings_path)
@@ -106,7 +113,7 @@ local RenderNewAuctionPopup = function()
             if popupAuctionItem:len() > 0 then
                 auctionsettings[CharConfig] = auctionsettings[CharConfig] or {}
                 auctionsettings[CharConfig][popupAuctionItem] = popupAuctionCost
-                SaveSettings(true)
+                SaveSettingsAndClear(true)
                 AuctionJob.Setup()
             else
                 print("\arError Saving Auction Item: Item Name cannot be empty.\ax")
@@ -170,14 +177,14 @@ function AuctionJob.Render()
     AuctionTimer, used = ImGui.SliderInt("Auction Timer", AuctionTimer, 1, 10, "%d")
     if used then
         auctionsettings["Default"]["Timer"] = AuctionTimer
-        SaveSettings(false)
+        SaveSettings(true)
     end
     local newText, _ = ImGui.InputText("Auction Channel", AuctionChannelNumber, ImGuiInputTextFlags.None)
     ---@diagnostic disable-next-line: undefined-field
     if newText:len() > 0 and newText ~= AuctionChannelNumber then
         AuctionChannelNumber = newText
         auctionsettings["Default"]["ChannelNumber"] = newText
-        SaveSettings()
+        SaveSettings(true)
     end
     ImGui.Separator()
     pauseAuctioning, _ = ImGui.Checkbox("Pause Auction", pauseAuctioning)
@@ -220,7 +227,7 @@ function AuctionJob.Render()
                 auctionsettings[CharConfig][k] = nil
                 auctionsettings[CharConfig .. "_disabled"] = auctionsettings[CharConfig .. "_disabled"] or {}
                 auctionsettings[CharConfig .. "_disabled"][k] = v
-                SaveSettings(true)
+                SaveSettingsAndClear(true)
                 cacheItems()
             end
             ImGui.PopID()
@@ -228,7 +235,7 @@ function AuctionJob.Render()
             ImGui.PushID(k .. "_trash_btn")
             if ImGui.SmallButton(ICONS.FA_TRASH) then
                 auctionsettings[CharConfig][k] = nil
-                SaveSettings(true)
+                SaveSettingsAndClear(true)
             end
             ImGui.PopID()
         end
@@ -248,7 +255,7 @@ function AuctionJob.Render()
                 auctionsettings[CharConfig] = auctionsettings[CharConfig] or {}
                 auctionsettings[CharConfig][k] = v
                 auctionsettings[CharConfig .. "_disabled"][k] = nil
-                SaveSettings(true)
+                SaveSettingsAndClear(true)
                 cacheItems()
             end
             ImGui.PopID()
@@ -256,7 +263,7 @@ function AuctionJob.Render()
             ImGui.PushID(k .. "_trash_btn")
             if ImGui.SmallButton(ICONS.FA_TRASH) then
                 auctionsettings[CharConfig][k] = nil
-                SaveSettings(true)
+                SaveSettingsAndClear(true)
             end
             ImGui.PopID()
         end
