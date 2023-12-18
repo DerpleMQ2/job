@@ -17,6 +17,7 @@ jobs["JobBard"] = require('jobs/bard')
 jobs["JobLich"] = require('jobs/lich')
 jobs["JobTravel"] = require('jobs/travel')
 jobs["JobAuction"] = require('jobs/auction')
+jobs["JobHunter"] = require('jobs/hunter')
 
 CurLoadedChar = mq.TLO.Me.CleanName()
 CharConfig = mq.TLO.Me.CleanName() --'Char_'..mq.TLO.EverQuest.Server()..'_'..mq.TLO.Me.CleanName()..'_Config'
@@ -291,6 +292,7 @@ end
 ---@diagnostic disable-next-line: unused-local
 local script_actor = JobActors.register(function(message)
     if message()["from"] == CharConfig then return end
+    if message()["script"] ~= "Job" then return end
 
     printf("\ayGot Event from(\am%s\ay) module(\at%s\ay) event(\at%s\ay)", message()["from"], message()["module"],
         message()["event"])

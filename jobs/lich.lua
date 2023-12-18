@@ -58,7 +58,7 @@ local SaveSettings = function(doBroadcast)
     LIP.save(lich_settings_path, lichsettings)
 
     if doBroadcast then
-        JobActors.send({ from = CharConfig, module = "JobLich", event = "SaveSettings" })
+        JobActors.send({ from = CharConfig, script = "Job", module = "JobLich", event = "SaveSettings" })
     end
 end
 

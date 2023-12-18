@@ -154,7 +154,7 @@ local SaveSettings = function(doBroadcast)
     LIP.save(heal_settings_path, healsettings)
 
     if doBroadcast then
-        JobActors.send({ from = CharConfig, module = "JobHeal", event = "SaveSettings" })
+        JobActors.send({ from = CharConfig, script = "Job", module = "JobHeal", event = "SaveSettings" })
     end
 end
 

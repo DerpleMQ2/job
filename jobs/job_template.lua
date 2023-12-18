@@ -28,7 +28,7 @@ local SaveSettings = function(doBroadcast)
     LIP.save(examplejob_settings_path, examplejobsettings)
 
     if doBroadcast then
-        JobActors.send({ from = CharConfig, module = "JobExampleJob", event = "SaveSettings" })
+        JobActors.send({ from = CharConfig, script = "Job", module = "JobExampleJob", event = "SaveSettings" })
     end
 end
 

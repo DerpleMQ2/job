@@ -312,7 +312,7 @@ local SaveSettings = function(doBroadcast)
     LIP.save(TravelJob_settings_path, TravelJobSettings)
 
     if doBroadcast then
-        JobActors.send({ from = CharConfig, module = "JobTravel", event = "SaveSettings" })
+        JobActors.send({ from = CharConfig, script = "Job", module = "JobTravel", event = "SaveSettings" })
     end
 end
 

@@ -250,7 +250,7 @@ local SaveSettings = function(doBroadcast)
 	LIP.save(pet_settings_path, petsettings)
 
 	if doBroadcast then
-		JobActors.send({ from = CharConfig, module = "JobPet", event = "SaveSettings" })
+		JobActors.send({ from = CharConfig, script = "Job", module = "JobPet", event = "SaveSettings" })
 	end
 end
 
@@ -342,6 +342,8 @@ function Pet.Render()
 	end
 end
 
+local lastTarget = 0
+
 function Pet.GiveTime()
 	if highestPet == nil or highestPet == "None" or BFOUtils.IsCasting() then
 		return
@@ -384,6 +386,8 @@ function Pet.GiveTime()
 	end
 
 	if petsettings[CharConfig] and petsettings[CharConfig]["AutoKillNpcs"] then
+		killRadius = petsettings["Default"]["AutoKillNpcsRadius"] or 165
+		killZRadius = petsettings["Default"]["AutoKillNpcsZRadius"] or 10
 		if petsettings["Default"]["AutoKillNpcsName"] then
 			mq.cmd("/target " ..
 				petsettings["Default"]["AutoKillNpcsName"] .. " npc radius " .. killRadius .. " zradius " .. killZRadius)
@@ -391,11 +395,11 @@ function Pet.GiveTime()
 			mq.cmd("/target npc radius " .. killRadius .. " zradius " .. killZRadius)
 		end
 
-		if mq.TLO.Target.Distance() > 175 or mq.TLO.Target.Type() ~= "NPC" or mq.TLO.Target.ID() == mq.TLO.Pet.ID() then
+		if mq.TLO.Target.Distance() > killRadius or mq.TLO.Target.Type() ~= "NPC" or mq.TLO.Target.ID() == mq.TLO.Pet.ID() then
 			mq.cmd("/target clear")
 		end
 
-		if mq.TLO.Target.ID() > 0 and mq.TLO.Pet.Distance() < 20 then
+		if mq.TLO.Target.ID() > 0 and mq.TLO.Pet.Distance() < 20 and not mq.TLO.Pet.Target() then
 			mq.cmd("/pet attack " .. mq.TLO.Target.ID())
 		end
 	end
@@ -422,14 +426,29 @@ function Pet.GiveTime()
 			end
 		end
 
-		if mq.TLO.Target.ID() > 0 and (mq.TLO.Target.Distance() > 200 or mq.TLO.Target.Type() ~= "NPC" or mq.TLO.Target.ID() == mq.TLO.Pet.ID()) then
+		--printf("%d", mq.TLO.Target.Distance())
+		if mq.TLO.Target.ID() > 0 and (mq.TLO.Target.Distance() > killRadius or mq.TLO.Target.Type() ~= "NPC" or mq.TLO.Target.ID() == mq.TLO.Pet.ID()) then
 			mq.cmd("/target clear")
 		end
 
-		if mq.TLO.Target.ID() > 0 and mq.TLO.Pet.Distance() < killRadius then
+		if mq.TLO.Target.ID() > 0 and mq.TLO.Pet.Distance() < killRadius and not mq.TLO.Pet.Target() and lastTarget ~= mq.TLO.Target.ID() then
 			mq.cmd("/bcaa //pet attack " .. mq.TLO.Target.ID())
 		end
+
+		if mq.TLO.Pet.Target.ID() ~= mq.TLO.Target.ID() then
+			mq.cmd("/bcaa //pet attack " .. mq.TLO.Target.ID())
+		end
+
+		if mq.TLO.Target.ID() > 0 and mq.TLO.Target.Distance() > 15 and not mq.TLO.Nav.Active() then
+			--mq.cmdf("/bct melee //nav id %d", mq.TLO.Target.ID())
+		end
+
+		if mq.TLO.Target.ID() > 0 and mq.TLO.Target.Distance() <= 15 and not mq.TLO.Nav.Active() then
+			--mq.cmd("/bct melee //killthis")
+		end
 	end
+
+	lastTarget = mq.TLO.Target.ID()
 end
 
 local armPets = function()

@@ -66,7 +66,7 @@ local SaveSettings = function(doBroadcast)
     LIP.save(buff_settings_path, buffsettings)
 
     if doBroadcast then
-        JobActors.send({ from = CharConfig, module = "JobBuff", event = "SaveSettings" })
+        JobActors.send({ from = CharConfig, script = "Job", module = "JobBuff", event = "SaveSettings" })
     end
 end
 

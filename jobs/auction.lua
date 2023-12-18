@@ -58,7 +58,7 @@ local function SaveSettings(doBroadcast)
     LIP.save(auctionjob_settings_path, auctionsettings)
 
     if doBroadcast then
-        JobActors.send({ from = CharConfig, module = "JobAuction", event = "SaveSettings" })
+        JobActors.send({ from = CharConfig, script = "Job", module = "JobAuction", event = "SaveSettings" })
     end
 end
 
