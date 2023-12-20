@@ -1,213 +1,11 @@
 ---@diagnostic disable: lowercase-global
 local mq = require('mq')
 local LIP = require('lib/LIP')
-local utils = require('lib/ed/utils')
-local BFOUtils = require('lib/bfoutils')
+require('lib/ed/utils')
+require('lib/bfoutils')
 
 local ImGui = require('ImGui')
 ImGuiTabBarFlags = ImGuiTabBarFlags
-
-local wizardGates = {
-    3183,
-    3180,
-    3181,
-    3795,
-    3793,
-    3833,
-    4963,
-    5734,
-    4965,
-    5732,
-    4964,
-    5735,
-    6181,
-    6183,
-    6182,
-    6176,
-    6177,
-    6178,
-    8236,
-    8238,
-    8239,
-    10880,
-    10881,
-    10882,
-    10876,
-    10875,
-    10877,
-    10878,
-    10879,
-    11985,
-    11984,
-    15889,
-    15890,
-    15891,
-    20541,
-    20542,
-    20543,
-
-
-    1199,
-    1264,
-    1265,
-    1516,
-    1325,
-    5824,
-    1738,
-    1739,
-    1322,
-    1336,
-    1337,
-    1338,
-    1371,
-    1372,
-    1373,
-    1374,
-    1375,
-
-    2023,
-    2024,
-    2022,
-    2025,
-
-    2026,
-    2027,
-    2028,
-    1417,
-
-    1418,
-    2184,
-    1423,
-    1399,
-    1425,
-
-
-    36,
-    541,
-    542,
-    543,
-    544,
-    545,
-    546,
-    547,
-    548,
-    561,
-    562,
-    563,
-    564,
-    565,
-    566,
-    567,
-    568,
-    602,
-    603,
-    604,
-    605,
-    606,
-    666,
-    674,
-};
-
-local druidGates = {
-    3182,
-    3184,
-    24773,
-    3794,
-    3792,
-    25903,
-    4967,
-    5733,
-    4966,
-    5731,
-    25700,
-    25691,
-    6185,
-    6184,
-    25692,
-    6180,
-    6179,
-    24774,
-    24775,
-    8235,
-    8237,
-    8965,
-    8967,
-    24776,
-    9956,
-    9957,
-    9958,
-    9953,
-    9954,
-    9955,
-    9950,
-    9951,
-    9952,
-    11982,
-    11981,
-    11980,
-    20538,
-    20539,
-    20540,
-    1199,
-    1264,
-    1265,
-    1517,
-    1326,
-    25694,
-    1322,
-    1736,
-    1737,
-    5824,
-    2020,
-    2021,
-    2183,
-    1433,
-    2029,
-    2030,
-    2031,
-    1440,
-    1438,
-    1434,
-    1398,
-    24771,
-    25689,
-    25690,
-    25695,
-    25699,
-    25899,
-    25900,
-    25901,
-    25902,
-    25904,
-    25693,
-    25696,
-    25698,
-    25906,
-    36,
-    530,
-    531,
-    532,
-    533,
-    534,
-    535,
-    536,
-    537,
-    538,
-    550,
-    551,
-    552,
-    553,
-    554,
-    555,
-    556,
-    557,
-    558,
-    607,
-    608,
-    609,
-    610,
-    611,
-};
 
 local travelColors = {}
 travelColors["Group v2"] = {}
@@ -243,8 +41,7 @@ local classNames = { "Druid", "Wizard" }
 local className = "Druid"
 local charName = ""
 
-gateClasses["Druid"] = druidGates
-gateClasses["Wizard"] = wizardGates
+local gateClasses = {}
 
 local travelTabs = {}
 local travelTabsSorted = {}
@@ -252,6 +49,8 @@ local travelTabsSorted = {}
 TravelJobSettings = {}
 
 local TravelJob = {}
+
+local bfo_travel_pickle_path = mq.configDir .. '/bfo/' .. 'bfo_travel.lua'
 
 local TravelJob_settings_file = '/lua/config/travel.ini'
 local TravelJob_settings_path = nil
@@ -281,12 +80,19 @@ function TravelJob.Setup(config_dir)
         end
     end
 
+    local config, _ = loadfile(bfo_travel_pickle_path)
+    local travelConfig = {}
+    if config then travelConfig = config() end
+
+    gateClasses["Druid"] = travelConfig.Druid
+    gateClasses["Wizard"] = travelConfig.Wizard
+
     charName = TravelJobSettings["Default"]["Char"] or "None"
 
     travelTabs = {}
     travelTabsSorted = {}
 
-    for _, v in ipairs(gateClasses[TravelJobSettings["Default"]["Class"]]) do
+    for v, _ in pairs(gateClasses[TravelJobSettings["Default"]["Class"]]) do
         local subCat = mq.TLO.Spell(v).Subcategory()
 
         if subCat ~= "Unknown" or TravelJobSettings["Default"]["WMCast"] == 1 then

@@ -432,11 +432,11 @@ function Pet.GiveTime()
 		end
 
 		if mq.TLO.Target.ID() > 0 and mq.TLO.Pet.Distance() < killRadius and not mq.TLO.Pet.Target() and lastTarget ~= mq.TLO.Target.ID() then
-			mq.cmd("/bcaa //pet attack " .. mq.TLO.Target.ID())
+			mq.cmd("/dgza /pet attack " .. mq.TLO.Target.ID())
 		end
 
 		if mq.TLO.Pet.Target.ID() ~= mq.TLO.Target.ID() then
-			mq.cmd("/bcaa //pet attack " .. mq.TLO.Target.ID())
+			mq.cmd("/dgza /pet attack " .. mq.TLO.Target.ID())
 		end
 
 		if mq.TLO.Target.ID() > 0 and mq.TLO.Target.Distance() > 15 and not mq.TLO.Nav.Active() then
