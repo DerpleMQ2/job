@@ -154,11 +154,11 @@ local renderTabs = function()
                     if ImGui.Button(sv, 150, 25) then
                         if TravelJobSettings["Default"]["WMCast"] ~= 1 then
                             if spellType == "Single" then
-                                mq.cmd("/bct " ..
-                                    charName .. " //casting \"" ..
+                                mq.cmd("/dex " ..
+                                    charName .. " /casting \"" ..
                                     sv .. "\" -maxtries|10 -targetid|" .. (mq.TLO.Target.ID() or 0))
                             else
-                                mq.cmd("/bct " .. charName .. " //casting \"" .. sv .. "\" -maxtries|10")
+                                mq.cmd("/dex " .. charName .. " /casting \"" .. sv .. "\" -maxtries|10")
                             end
                         else
                             if spellType == "Single" then
