@@ -291,14 +291,15 @@ end
 -- Global Messaging callback
 ---@diagnostic disable-next-line: unused-local
 local script_actor = JobActors.register(function(message)
-    if message()["from"] == CharConfig then return end
-    if message()["script"] ~= "Job" then return end
+    local msg = message()
+    if msg["from"] == CharConfig then return end
+    if msg["script"] ~= "Job" then return end
 
-    printf("\ayGot Event from(\am%s\ay) module(\at%s\ay) event(\at%s\ay)", message()["from"], message()["module"],
-        message()["event"])
+    printf("\ayGot Event from(\am%s\ay) module(\at%s\ay) event(\at%s\ay)", msg["from"], msg["module"],
+        msg["event"])
 
-    if message()["module"] then
-        jobs[message()["module"]].Setup(config_dir)
+    if msg["module"] then
+        jobs[msg["module"]].Setup(config_dir)
     end
 end)
 
